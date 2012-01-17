@@ -14,16 +14,14 @@ from fabric.context_managers import cd
 
 from getpass import getpass, getuser
 
+from data.fabsettings import *
 
 # This defaults the run and sudo functions to local, so we don't have to duplicate
 # code for local development and deployed servers.
 env.sudo = local
 env.run = local
 
-# Where should I get Wordpress??
-env.wp_tarball = "http://wordpress.org/latest.tar.gz"
-
-env.cache_servers = ["lb1"]
+env.cache_servers = ["lb1", "lb2", "lb3"]
 
 """
 Commands - setup
@@ -45,6 +43,10 @@ def git_checkout():
                 run('git checkout -b %(gitbranch)s origin/%(gitbranch)s' % env)
         run('git checkout %(gitbranch)s' % env)
         run('git pull origin %(gitbranch)s' % env)
+
+        if env.gitsubmodules:
+            run('git submodule init')
+            run('git submodule update --recursive')
 
 def git_tag_stable():
     """
@@ -73,25 +75,12 @@ def git_tag_stable():
             local('git tag %s' % tag)
             local('git push --tags')
 
-def svn_checkout():
-    """
-    Checkout the site
-    """
-    env.svn_user = prompt('SVN Username: ')
-    env.svn_pass = getpass('Enter SVN Password: ')
-    
-    with cd(env.path):
-        run('svn co %(repo)s . --username %(svn_user)s --password %(svn_pass)s' % env)
-
 def install_apache_conf():
     """
     Setup the apache config file
     """
     with cd(env.path):
         sudo('cp apache/%(settings)s-apache.conf ~/apache/%(project_name)s' % env)
-        with settings(warn_only=True):
-            run('rm ./apache/*.dbm')
-        run('./apache/make_map_dbms.sh')
         sudo('service apache2 reload' % env)
         run('run-for-cluster -t app "sudo service apache2 reload"')
 
@@ -118,8 +107,6 @@ def setup():
     elif env.strategy == 'svn':
         svn_checkout()
 
-    fix_perms()
-
 def deploy():
     """
     Deploy new code to the site
@@ -136,8 +123,7 @@ def deploy():
     elif env.strategy == 'svn':
         svn_checkout()
 
-    # fix_perms()
-    force_nfs_refresh()
+    sync_app_servers()
 
 """
 Commands - data
@@ -151,22 +137,20 @@ def bootstrap():
 
         print("\nStep 2: Database and basic Wordpress setup")
 
-        env.run(env.prefix + 'php wp-scripts/setup_wp-config.php')
-
-        fix_perms()
+        env.run(env.prefix + 'php tools/wp-scripts/setup_wp-config.php')
 
         create_db()
-        env.run(env.prefix + 'php wp-scripts/setup.php')
+        env.run(env.prefix + 'php tools/wp-scripts/setup.php')
 
-        env.run(env.prefix + 'php wp-scripts/setup_wp-config.php --finish')
+        env.run(env.prefix + 'php tools/wp-scripts/setup_wp-config.php --finish')
 
         print("\nStep 3: Setup plugins")
 
-        env.run(env.prefix + 'php wp-scripts/setup_plugins.php')
+        env.run(env.prefix + 'php tools/wp-scripts/setup_plugins.php')
 
         print("\nStep 4: Cleanup, create blogs")
 
-        env.run(env.prefix + 'php wp-scripts/setup_root.php')
+        env.run(env.prefix + 'php tools/wp-scripts/setup_root.php')
 
         if confirm("Create child blogs?"): create_blogs()
 
@@ -228,13 +212,14 @@ def create_blogs():
 def force_nfs_refresh():
     env.run("run-for-cluster -t app 'cd %(path)s; git status;'" % env)
 
+def sync_app_servers():
+    env.run("run-for-cluster -t app 'sudo rsync -a --delete /mnt/apps/sites/%(project_name)s/ %(path)s/'" % env)
+
 def fix_perms():
     if env.fix_perms:
         with cd(env.path):
-            env.sudo("chgrp -Rf www-data wp-content/blogs.dir")
-            env.sudo("chmod -Rf g+rw wp-content/blogs.dir")
-            env.sudo("chgrp -Rf www-data wp-content/uploads")
-            env.sudo("chmod -Rf g+rw wp-content/uploads")
+            env.sudo("chgrp -Rf www-data media")
+            env.sudo("chmod -Rf g+rw media")
 
 def wrap_media():
     with cd(env.path):
@@ -282,53 +267,9 @@ def check_env():
     env.sudo = sudo
     env.run = run
 
-def get_wordpress():
-    print("Downloading and installing Wordpress...")
-    with cd(env.path):
-        env.run('curl -s %(wp_tarball)s | tar xz --strip-components 1 -f - ' % env)
-    print("Done.")
-
-def install_plugin(name, version='latest'):
-    try:
-        from lxml.html import parse
-        from lxml.cssselect import CSSSelector
-    except ImportError:
-        print("I need lxml to do this")
-        exit()
-
-    print("Looking for %s..." % name)
-
-    url = "http://wordpress.org/extend/plugins/%s/" % name
-    p = parse("%sdownload/" % url)
-    sel = CSSSelector('.block-content .unmarked-list a')
-    dload_elems = sel(p)
-
-    if not dload_elems:
-        print("Can't find plugin %s" % name)
-        exit()
-
-    #first is latest
-    if version == 'latest':
-        plugin_zip = dload_elems[0].attrib['href']
-        version = dload_elems[0].text
-    else:
-        plugin_zip = None
-        for e in dload_elems:
-            if e.text == 'version':
-                plugin_zip = e.attrib['href']
-                break
-
-    if not plugin_zip:
-        print("Can't find plugin %s" % name)
-        exit()
-    else:
-        print("Found version %s of %s, installing..." % (version, name) )
-        with cd(env.path + "/wp-content/plugins"):
-            env.run('curl -s %s -o %s.%s.zip' % (plugin_zip, name, version) )
-            env.run('unzip -n %s.%s.zip' % (name, version) )
-
-        if raw_input("Read instructions for %s? [Y|n]" % name) in ("","Y"):
-            subprocess.call(['open', url])
+def runserver():
+    username = getuser()
+    local("sudo ./tools/bin/runserver.py %s" % username, capture=False)
 
 def _confirm_branch():
     if (env.settings == 'production' and env.gitbranch != 'stable'):
