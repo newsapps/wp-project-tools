@@ -1,6 +1,6 @@
 <?php
 
-include( 'cli-load.php' );
+include( 'tools/cli-load.php' );
 
 $query = "select blog_id from wp_blogs";
 $results = $wpdb->get_results($query, 'ARRAY_A');

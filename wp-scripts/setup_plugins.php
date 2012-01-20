@@ -2,7 +2,7 @@
 
 define('WP_INSTALLING', true);
 
-include( 'cli-load.php' );
+include( 'tools/cli-load.php' );
 
 # Check for data/plugins.json
 if ( file_exists( dirname( dirname( __DIR__ ) ) . '/data/plugins.json' ) ) {
@@ -10,6 +10,10 @@ if ( file_exists( dirname( dirname( __DIR__ ) ) . '/data/plugins.json' ) ) {
     $tmp_fc = file_get_contents($tmp_fn);
 
     $plugins_data = json_decode($tmp_fc, $assoc = true);
+
+    if ( $plugins_data == NULL )
+        throw new Exception( "Plugins file 'data/plugins.json' could not be parsed\n" );
+
     $plugins = $plugins_data['plugins'];
 }
 

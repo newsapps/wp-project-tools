@@ -8,7 +8,7 @@
  * the .htaccess and complete network installation config file.
  *****/
 
-require_once( 'cli-load.php' );
+require_once( 'tools/cli-load.php' );
 
 $options = getopt("", array("finish"));
 
@@ -16,7 +16,7 @@ global $settings;
 
 // lets write some files
 
-if ( array_key_exists('finish', $options) ) {
+if ( array_key_exists('finish', $options) && empty( $settings['install']['no_apache'] ) ) {
     // Write the .htaccess file
     $htaccess_file = 'RewriteEngine On
 	RewriteBase ' . $settings['base'] . '
@@ -39,6 +39,8 @@ if ( array_key_exists('finish', $options) ) {
 $newConfig = "<?php
 /** Auto-generated config file **/\n\n";
 
+# Go through the 'wp-config' items from the settings file
+# and write them to the file
 foreach ( $settings['wp-config'] as $key => $val ) {
     if ( is_string( $val ) )
         $newConfig .= "define('$key', '$val');\n";
@@ -74,7 +76,7 @@ $newConfig .= "
 define( 'DISABLE_WP_CRON', true);
 define( 'WP_CONTENT_DIR', dirname(__FILE__) );
 define( 'WP_PLUGIN_DIR', dirname(__FILE__) . '/plugins' );
-define( 'WPMU_PLUGIN_DIR', dirname(__FILE__) . '/muplugins' );
+define( 'WPMU_PLUGIN_DIR', dirname(__FILE__) . '/mu-plugins' );
 define( 'BLOGUPLOADDIR', dirname(__FILE__) . '/media' );
 
 /** Absolute path to the WordPress directory. */

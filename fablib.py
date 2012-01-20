@@ -33,6 +33,7 @@ def git_clone_repo():
     with settings(warn_only=True):
         run('git clone %(gitrepo)s %(path)s' % env)
 
+
 def git_checkout():
     """
     Pull the latest code on the specified branch.
@@ -48,32 +49,34 @@ def git_checkout():
             run('git submodule init')
             run('git submodule update --recursive')
 
+
 def git_tag_stable():
     """
     Tag branch with datetime release number
     """
     today = strftime('%y.%m.%d', localtime())
-    
+
     print "Checking for tags..."
-    
+
     with settings(hide('warnings'), warn_only=True):
         response = local("git tag -l | grep '^%s'" % today)
         if response.failed:
             tag = '%s-0' % today
-            
+
             print "Found no tags for today. Tagging with %s." % tag
             local('git tag %s' % tag)
             local('git push --tags')
         else:
             numbers = [int(line.split('-')[1]) for line in response.splitlines()]
             numbers.sort()
-            
+
             next = numbers[-1] + 1
             tag = '%s-%s' % (today, next)
-            
+
             print "Found tags for today's date. Incrementing -- tagging with %s." % tag
             local('git tag %s' % tag)
             local('git push --tags')
+
 
 def install_apache_conf():
     """
@@ -83,6 +86,7 @@ def install_apache_conf():
         sudo('cp apache/%(settings)s-apache.conf ~/apache/%(project_name)s' % env)
         sudo('service apache2 reload' % env)
         run('run-for-cluster -t app "sudo service apache2 reload"')
+
 
 def install_nginx_conf():
     """
@@ -107,14 +111,15 @@ def setup():
     elif env.strategy == 'svn':
         svn_checkout()
 
+
 def deploy():
     """
     Deploy new code to the site
     """
     _confirm_branch()
-    
+
     require('settings', provided_by=[production, staging])
-    
+
     if env.strategy == 'git':
         require('gitbranch', provided_by=[stable, master, branch])
 
@@ -133,26 +138,32 @@ def bootstrap():
         print("\nStep 1: Install required PHP extensions/apps")
 
         if confirm('Continue installing requirements? Can skip if already installed.'):
-            env.run('sudo ./requirements.sh')
+            env.run('sudo setup_env.sh')
 
         print("\nStep 2: Database and basic Wordpress setup")
 
-        env.run(env.prefix + 'php tools/wp-scripts/setup_wp-config.php')
+        with settings(warn_only=True):
+            env.run('rm wp-config.php');
+        env.run(env.prefix + './runscript.sh setup_wp-config')
 
         create_db()
-        env.run(env.prefix + 'php tools/wp-scripts/setup.php')
+        env.run(env.prefix + './runscript.sh install')
+        env.run(env.prefix + './runscript.sh install_network')
 
-        env.run(env.prefix + 'php tools/wp-scripts/setup_wp-config.php --finish')
+        with settings(warn_only=True):
+            env.run('rm wp-config.php');
+        env.run(env.prefix + './runscript.sh setup_wp-config --finish')
 
         print("\nStep 3: Setup plugins")
 
-        env.run(env.prefix + 'php tools/wp-scripts/setup_plugins.php')
+        env.run(env.prefix + './runscript.sh setup_plugins')
 
         print("\nStep 4: Cleanup, create blogs")
 
-        env.run(env.prefix + 'php tools/wp-scripts/setup_root.php')
+        env.run(env.prefix + './runscript.sh set_root_blog_defaults')
 
         if confirm("Create child blogs?"): create_blogs()
+
 
 def create_db():
     if not env.db_root_pass:
@@ -165,6 +176,7 @@ def create_db():
         env.run('mysqladmin --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s create %(db_name)s' % env)
         env.run('echo "GRANT ALL ON * TO \'%(db_wpuser_name)s\'@\'%%\' IDENTIFIED BY \'%(db_wpuser_pass)s\';" | mysql --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s %(db_name)s' % env)
 
+
 def load_db(dump_slug='dump'):
     env.dump_slug = dump_slug
     if not env.db_root_pass:
@@ -172,12 +184,14 @@ def load_db(dump_slug='dump'):
     with cd(env.path):
         env.run("bzcat data/%(dump_slug)s.sql.bz2 |sed s/WPDEPLOYDOMAN/%(wpdomain)s/g |mysql --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s --max_allowed_packet=2M %(db_name)s" % env)
 
+
 def dump_db(dump_slug='dump'):
     env.dump_slug = dump_slug
     if not env.db_root_pass:
         env.db_root_pass = getpass("Database password: ")
     with cd(env.path):
         env.run("mysqldump --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s --max_allowed_packet=2M --extended-insert=FALSE --lock-all-tables %(project_name)s |sed s/%(wpdomain)s/WPDEPLOYDOMAN/g |bzip2 > data/%(dump_slug)s.sql.bz2" % env)
+
 
 def destroy_db():
     if not env.db_root_pass:
@@ -190,30 +204,35 @@ def destroy_db():
         else:
             env.run('mysqladmin -f --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s drop %(project_name)s' % env)
             env.run('echo "DROP USER \'%(db_wpuser_name)s\'@\'%%\';" | mysql --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s' % env)
-    
+
+
 def destroy_attachments():
     with cd(env.path):
         env.run('rm -rf wp-content/blogs.dir')
+
 
 def reload_db(dump_slug='dump'):
     destroy_db()
     create_db()
     env.run(env.prefix + 'php %(path)s/wp-scripts/setup_wp-config.php --finish' % env )
     load_db(dump_slug)
-    # run_scripts()
+
 
 def create_blogs():
-    i=0;
-    response='';
+    i = 0
+    response = ''
     while "No more blogs" not in response:
-        response = env.run(env.prefix + "php wp-scripts/setup_blog.php -n %s" % i)
-        i+=1;
+        response = env.run(env.prefix + "./runscript.sh setup_blog -n %s" % i)
+        i += 1
+
 
 def force_nfs_refresh():
     env.run("run-for-cluster -t app 'cd %(path)s; git status;'" % env)
 
+
 def sync_app_servers():
     env.run("run-for-cluster -t app 'sudo rsync -a --delete /mnt/apps/sites/%(project_name)s/ %(path)s/'" % env)
+
 
 def fix_perms():
     if env.fix_perms:
@@ -221,20 +240,24 @@ def fix_perms():
             env.sudo("chgrp -Rf www-data media")
             env.sudo("chmod -Rf g+rw media")
 
+
 def wrap_media():
     with cd(env.path):
         env.run('tar zcf data/media.tgz wp-content/blogs.dir/* wp-content/uploads/*')
     print('Wrapped up media.\n')
+
 
 def unwrap_media():
     with cd(env.path):
         env.run('tar zxf data/media.tgz')
     print('Unwrapped media.\n')
 
+
 def put_media():
     check_env()
     put('data/media.tgz','%(path)s/data/media.tgz' % env)
     print('Put media on server.\n')
+
 
 def get_media():
     check_env()
@@ -267,9 +290,6 @@ def check_env():
     env.sudo = sudo
     env.run = run
 
-def runserver():
-    username = getuser()
-    local("sudo ./tools/bin/runserver.py %s" % username, capture=False)
 
 def _confirm_branch():
     if (env.settings == 'production' and env.gitbranch != 'stable'):
@@ -281,19 +301,31 @@ def _confirm_branch():
 Project specific commands
 """
 def clear_cache():
-    require('settings', provided_by=[production,staging])
+    require('settings', provided_by=[production, staging])
     for server in env.cache_servers:
-        env.run('curl -X PURGE -H "Host: %s" http://%s/' % (env.wpdomain, server))
+        env.run('curl -I -X PURGE -H "Host: %s" http://%s/' % (env.wpdomain, server))
+
+
+def clear_media_cache():
+    require('settings', provided_by=[production, staging])
+    for server in env.cache_servers:
+        env.run('curl -I -X PURGE -H "Host: %s" http://%s/media/.*' % (env.wpdomain, server))
+        env.run('curl -I -X PURGE -H "Host: %s" http://%s/.*/media/.*' % (env.wpdomain, server))
+        env.run('curl -I -X PURGE -H "Host: %s" http://%s/.*/files/.*' % (env.wpdomain, server))
+
 
 def clear_asset_cache():
-    require('settings', provided_by=[production,staging])
+    require('settings', provided_by=[production, staging])
     for server in env.cache_servers:
-        env.run('curl -X PURGE -H "Host: %s" http://%s/.*/wp-content/.*' % (env.wpdomain, server))
+        env.run('curl -I -X PURGE -H "Host: %s" http://%s/wp-content/.*' % (env.wpdomain, server))
+        env.run('curl -I -X PURGE -H "Host: %s" http://%s/.*/wp-content/.*' % (env.wpdomain, server))
+
 
 def clear_admin_cache():
-    require('settings', provided_by=[production,staging])
+    require('settings', provided_by=[production, staging])
     for server in env.cache_servers:
-        env.run('curl -X PURGE -H "Host: %s" http://%s/.*/wp-admin/.*' % (env.wpdomain, server))
+        env.run('curl -I -X PURGE -H "Host: %s" http://%s/.*/wp-admin/.*' % (env.wpdomain, server))
+
 
 def run_script(script_name):
     """
@@ -301,10 +333,11 @@ def run_script(script_name):
     """
     env.script_name = script_name
     with cd(env.path):
-        env.run(env.prefix + 'php tools/wp-scripts/%(script_name)s.php' % env)
+        env.run(env.prefix + './runscript.sh %(script_name)s' % env)
+
 
 def robots_setup():
     require('settings', provided_by=[production, staging])
-    
+
     with cd(env.path):
         env.run('cp robots_%(settings)s.txt robots.txt')
