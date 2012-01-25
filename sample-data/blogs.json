@@ -1,0 +1,11 @@
+{
+    "blogs": [
+        {
+            "slug": "newblog",
+            "name": "My fancy new blog",
+            "options": {
+                "blogdescription": "This blog was automatically generated!"
+            }
+        }
+    ]
+}

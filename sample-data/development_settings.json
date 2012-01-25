@@ -1,0 +1,84 @@
+{
+    "install": {
+        "weblog_title":      "Example Project",
+        "user_name":         "admin",
+        "admin_email":       "admin@example.com",
+        "public":            1,
+        "admin_password":    "password",
+        "no_apache":         true,
+
+        "network_id":        1,
+        "hostname":          "example.dev",
+        "network_title":     "Example network",
+        "base":              "/",
+        "subdomain_install": false
+    },
+
+
+    "wp-config": {
+        "DB_NAME":           "example",
+        "DB_USER":           "example",
+        "DB_PASSWORD":       "example",
+        "DB_HOST":           "127.0.0.1",
+        "DB_CHARSET":        "utf8",
+        "DB_COLLATE":        "",
+        "WP_LANG":           "",
+        "WP_DEBUG":          false,
+        "DEPLOYMENT_TARGET": "development"
+    },
+
+    "network": {
+        "allowed_themes": [
+            "twentyeleven",
+            "twentyten"
+        ],
+        "varnish_server1":             "localhost",
+        "dashboard_blog":              1,
+        "registrationnotification":    "no",
+        "add_new_users":               0,
+        "registration":                "user",
+        "upload_space_check_disabled": 1,
+        "fileupload_maxk":             "15000",
+
+        "admin_footer_text":           "Thank you for using example project!",
+        "nsm_include_post_type_post":  1
+    },
+
+    "options": {
+        "template":             "twentyeleven",
+        "stylesheet":           "twentyeleven",
+        "current_theme":        "Twenty Eleven",
+        "timezone_string":      "America/Chicago",
+        "use_trackback":        1,
+        "comment_registration": 1,
+        "default_ping_status":  1,
+        "comments_notify":      1,
+        "comment_whitelist":    0,
+        "comment_moderation":   0,
+
+        "smtp_pass":            "",
+        "smtp_user":            "",
+        "smtp_auth":            "false",
+        "smtp_ssl":             "none",
+        "smtp_port":            "1025",
+        "smtp_host":            "localhost",
+        "mail_set_return_path": "",
+        "mailer":               "smtp",
+        "mail_from_name":       "Example",
+        "mail_from":            "no-reply@example.dev",
+
+        "wordpress_api_key":    "foo",
+        "akismet_discard_month": false,
+        "akismet_show_user_comments_approved": false,
+        "comment_registration": true,
+        "comment_whitelist":    false,
+        "comment_moderation":   false
+    },
+
+    "root_options": {
+        "template":             "twentyeleven",
+        "stylesheet":           "twentyeleven",
+        "current_theme":        "Twenty Eleven",
+        "timezone_string":      "America/Chicago"
+    }
+}
