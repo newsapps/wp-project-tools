@@ -19,6 +19,12 @@ git submodule add https://ryanmark@github.com/ryanmark/wp-project-tools.git tool
 # Get WordPress
 git submodule add https://github.com/WordPress/WordPress.git wordpress
 
+# Link up themes that ship with WordPress
+ln -s wordpress/wp-content/themes/* themes/
+
+# Get Akismet
+git submodule add https://github.com/git-mirror/wordpress-akismet.git plugins/akismet
+
 # Setup some project directories
 mkdir lib mu-plugins plugins themes wp-scripts
 
@@ -33,7 +39,8 @@ ln -s tools/bin/manage.sh manage.sh
 cp tools/fabfile.py fabfile.py
 
 # Commit
-git commit -am "WordPress project setup"
+git add .
+git commit -m "WordPress project setup"
 
 echo "----------------------------------------------------"
 echo " Please review the configuration in data/ and http/ "
