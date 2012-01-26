@@ -1,8 +1,24 @@
 #!/bin/bash
 
-# Setup a new WordPress project
+if [[ -z $WORDPRESS_TAG ]]; then
+    WORDPRESS_TAG="3.3.1"
+fi
 
+# Setup a new WordPress project
 PROJECT_DIR=`pwd`
+
+echo "Ready to setup some WordPress?"
+
+echo "Where should I create the project? [./wordpress]"
+read subdir
+
+if [[ ! -n $subdir ]]; then
+    PROJECT_DIR="$PROJECT_DIR/wordpress"
+elif [[ $subdir = /* ]]; then
+    PROJECT_DIR="$subdir"
+else
+    PROJECT_DIR="$PROJECT_DIR/$subdir"
+fi
 
 if [[ ! -d $PROJECT_DIR ]]; then
     mkdir $PROJECT_DIR
@@ -16,17 +32,20 @@ git init
 # Get tools
 git submodule add https://ryanmark@github.com/ryanmark/wp-project-tools.git tools
 
+# Setup some project directories
+mkdir lib mu-plugins plugins themes wp-scripts
+
 # Get WordPress
 git submodule add https://github.com/WordPress/WordPress.git wordpress
+cd wordpress
+git checkout $WORDPRESS_TAG
+cd $PROJECT_DIR
 
 # Link up themes that ship with WordPress
 ln -s wordpress/wp-content/themes/* themes/
 
 # Get Akismet
 git submodule add https://github.com/git-mirror/wordpress-akismet.git plugins/akismet
-
-# Setup some project directories
-mkdir lib mu-plugins plugins themes wp-scripts
 
 # Get example configurations
 cp -Rf tools/sample-data data
