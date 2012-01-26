@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Chicago Tribune News Applications fabfile
-# No copying allowed
+# Copying encouraged
 
 import os
 import subprocess
