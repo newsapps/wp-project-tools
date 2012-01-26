@@ -4,7 +4,7 @@ This is a box of tools for working with WordPress on the command line, automatin
 
 One-liner to setup a new project using these tools:
 
-    curl https://raw.github.com/newsapps/wp-project-tools/master/setup.sh | bash
+    bash -c "$(curl -fsSL https://raw.github.com/newsapps/wp-project-tools/master/setup.sh)"
 
 # Project layout
 
