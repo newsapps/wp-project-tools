@@ -8,21 +8,19 @@
 #   $ brew install nginx memcached memcache-php
 #
 # Get the php recipe
-#   $ curl -o `brew --prefix`/Library/Formula/php.rb https://raw.github.com/ampt/homebrew/php/Library/Formula/php.rb
-#   $ brew install php --with-mysql --with-fpm
+#   $ brew install https://raw.github.com/adamv/homebrew-alt/master/duplicates/php.rb --with-mysql --with-fpm
 #
 # Enable the memcache extension:
-#   $ mate /usr/local/Cellar/php/5.3.6/etc/php.ini
+#   $ mate /usr/local/etc/php.ini
 #  add 
 #   extension="/usr/local/Cellar/memcache-php/2.2.6/memcache.so"
 #  to the extension section
 #
 # Make sure the new php and nginx is on your path
-#   export PATH=/usr/local/sbin:/usr/local/bin:$PATH
+#   $ export PATH=/usr/local/sbin:/usr/local/bin:$PATH
 #
-# Then execute this script from the root of your site as 
-# root, passing in your username:
-#   $ sudo ./tools/bin/runserver.py rmark
+# Use the manage script to start the server:
+#   $ ./manage.sh runserver
 #
 # This script will load the nginx config file http/development-nginx.conf
 #
@@ -49,12 +47,19 @@ master_process off;
 
 events {
     worker_connections 128;
+    use kqueue;
+    multi_accept on;
 }
 
 http {
-    log_format simple '[$time_local] "$request" ($status) $body_bytes_sent bytes in $request_time seconds';
+    log_format simple '($status)	in $request_time s	"$request"';
     error_log /tmp/runserver.log;
     access_log /tmp/runserver.log simple;
+    client_max_body_size 20M;
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
 
     include       /usr/local/etc/nginx/mime.types;
     default_type  application/octet-stream;
@@ -73,10 +78,13 @@ daemonize = no
 php_flag[display_errors] = off
 php_admin_value[error_log] = /tmp/runserver.log
 php_admin_flag[log_errors] = on
+php_admin_value[memory_limit] = 256M
 user = %s
 group = nobody
+request_slowlog_timeout = 5s
+slowlog = /tmp/runserver.lo
 pm = static
-pm.max_children = 2
+pm.max_children = 8
 listen = /tmp/php5-fpm.sock
 """ % my_username
 
