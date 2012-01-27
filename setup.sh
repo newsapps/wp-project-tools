@@ -9,11 +9,11 @@ PROJECT_DIR=`pwd`
 
 echo "Ready to setup some WordPress?"
 
-echo "Where should I create the project? [./wordpress]"
+echo "Where should I create the project? [./wp-project]"
 read subdir
 
 if [[ ! -n $subdir ]]; then
-    PROJECT_DIR="$PROJECT_DIR/wordpress"
+    PROJECT_DIR="$PROJECT_DIR/wp-project"
 elif [[ $subdir = /* ]]; then
     PROJECT_DIR="$subdir"
 else
