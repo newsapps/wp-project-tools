@@ -60,6 +60,7 @@ http {
     tcp_nopush on;
     tcp_nodelay on;
     keepalive_timeout 65;
+    rewrite_log on;
 
     include       /usr/local/etc/nginx/mime.types;
     default_type  application/octet-stream;

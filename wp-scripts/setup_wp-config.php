@@ -77,7 +77,7 @@ define( 'DISABLE_WP_CRON', true);
 define( 'WP_CONTENT_DIR', dirname(__FILE__) );
 define( 'WP_PLUGIN_DIR', dirname(__FILE__) . '/plugins' );
 define( 'WPMU_PLUGIN_DIR', dirname(__FILE__) . '/mu-plugins' );
-define( 'BLOGUPLOADDIR', dirname(__FILE__) . '/media' );
+define( 'UPLOADBLOGSDIR',  '../media/blogs.dir' ); # has to be relative
 
 /** Absolute path to the WordPress directory. */
 if ( !defined('ABSPATH') )

@@ -26,9 +26,9 @@ if ( is_multisite() ) {
 
         $blog_slug = str_replace('/', '', $blog['path']);
 
-        update_option("upload_path", "../media/blogs.dir/$blog_slug");
-        update_option("upload_url_path", "/wp-content/blogs.dir/$blog_slug");
-        print( "Set the upload dir for '".get_bloginfo('name')."' to 'media/$blog_slug'\n" );
+        update_option("upload_path", "../media/blogs.dir/${blog['blog_id']}");
+        update_option("upload_url_path", "/wp-content/blogs.dir/${blog['blog_id']}");
+        print( "Set the upload dir for '".get_bloginfo('name')."' to 'media/blogs.dir/${blog['blog_id']}'\n" );
 
         restore_current_blog();
     }
