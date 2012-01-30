@@ -83,7 +83,7 @@ def install_apache_conf():
     Setup the apache config file
     """
     with cd(env.path):
-        sudo('cp apache/%(settings)s-apache.conf ~/apache/%(project_name)s' % env)
+        sudo('cp http/%(settings)s-apache.conf ~/apache/%(project_name)s' % env)
         sudo('service apache2 reload' % env)
         run('run-for-cluster -t app "sudo service apache2 reload"')
 
@@ -93,7 +93,7 @@ def install_nginx_conf():
     Setup the nginx config file
     """
     with cd(env.path):
-        sudo('cp apache/%(settings)s-nginx.conf ~/nginx/%(project_name)s' % env)
+        sudo('cp http/%(settings)s-nginx.conf ~/nginx/%(project_name)s' % env)
         run('run-for-cluster -t app "sudo service nginx reload"')
 
 """
