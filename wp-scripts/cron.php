@@ -3,7 +3,7 @@
  * Run WordPress cron from the command line
  **/
 
-include('../cli-load.php');
+include( dirname(__DIR__) . '/cli-load.php');
 
 ini_set('memory_limit', '256M');
 
