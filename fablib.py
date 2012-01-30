@@ -214,16 +214,18 @@ def destroy_attachments():
 def reload_db(dump_slug='dump'):
     destroy_db()
     create_db()
-    env.run(env.prefix + 'php %(path)s/wp-scripts/setup_wp-config.php --finish' % env )
+    with cd(env.path):
+        env.run(env.prefix + './manage.sh setup_wp-config --finish' % env )
     load_db(dump_slug)
 
 
 def create_blogs():
-    i = 0
-    response = ''
-    while "No more blogs" not in response:
-        response = env.run(env.prefix + "./runscript.sh setup_blog -n %s" % i)
-        i += 1
+    with cd(env.path):
+        i = 0
+        response = ''
+        while "No more blogs" not in response:
+            response = env.run(env.prefix + "./manage.sh setup_blog -n %s" % i)
+            i += 1
 
 
 def force_nfs_refresh():
