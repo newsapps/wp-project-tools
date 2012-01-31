@@ -335,7 +335,7 @@ def run_script(script_name):
     """
     env.script_name = script_name
     with cd(env.path):
-        env.run(env.prefix + './runscript.sh %(script_name)s' % env)
+        env.run(env.prefix + './manage.sh %(script_name)s' % env)
 
 
 def robots_setup():
