@@ -30,7 +30,7 @@ cd $PROJECT_DIR
 git init
 
 # Get tools
-git submodule add https://ryanmark@github.com/ryanmark/wp-project-tools.git tools
+git submodule add https://github.com/newsapps/wp-project-tools.git tools
 
 # Setup some project directories
 mkdir lib mu-plugins plugins themes wp-scripts
