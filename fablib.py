@@ -342,4 +342,4 @@ def robots_setup():
     require('settings', provided_by=[production, staging])
 
     with cd(env.path):
-        env.run('cp robots_%(settings)s.txt robots.txt')
+        env.run('ln -s robots_%(settings)s.txt robots.txt')
