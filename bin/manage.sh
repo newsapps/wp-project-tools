@@ -49,6 +49,8 @@ then
         # Have to run as root so we can use port 80. WordPress won't run
         # on an abitrary port. We need to pass the username in so we can
         # tell the webserver to run as the local user.
+        echo "Need to run the server as root so we can use port 80. Your sudo password, please."
+
         sudo tools/bin/runserver.py `whoami`
     else
         exit 0

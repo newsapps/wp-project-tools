@@ -41,9 +41,6 @@ cd wordpress
 git checkout $WORDPRESS_TAG
 cd $PROJECT_DIR
 
-# Link up themes that ship with WordPress
-ln -s wordpress/wp-content/themes/* themes/
-
 # Get Akismet
 git submodule add https://github.com/git-mirror/wordpress-akismet.git plugins/akismet
 
@@ -62,6 +59,7 @@ git add .
 git commit -m "WordPress project setup"
 
 echo "----------------------------------------------------"
+echo ""
 echo " Please review the configuration in data/ and http/ "
 echo ""
 echo " When you are satisfied with the configuration, run "
@@ -69,3 +67,7 @@ echo "      ./manage.sh setup_env"
 echo " to get the proper libraries installed, then run"
 echo "      fab bootstrap"
 echo " to install your WordPress blog"
+echo ""
+echo " If you want to use the themes that come with"
+echo " WordPress, run:"
+echo "      cp -rf wordpress/wp-content/themes/* themes/"
