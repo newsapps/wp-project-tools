@@ -144,25 +144,27 @@ def bootstrap():
 
         with settings(warn_only=True):
             env.run('rm wp-config.php');
-        env.run(env.prefix + './runscript.sh setup_wp-config')
+        env.run(env.prefix + './manage.sh setup_wp-config')
 
         create_db()
-        env.run(env.prefix + './runscript.sh install')
-        env.run(env.prefix + './runscript.sh install_network')
+        env.run(env.prefix + './manage.sh install')
+        env.run(env.prefix + './manage.sh install_network')
 
         with settings(warn_only=True):
             env.run('rm wp-config.php');
-        env.run(env.prefix + './runscript.sh setup_wp-config --finish')
+        env.run(env.prefix + './manage.sh setup_wp-config --finish')
 
         print("\nStep 3: Setup plugins")
 
-        env.run(env.prefix + './runscript.sh setup_plugins')
+        env.run(env.prefix + './manage.sh setup_plugins')
 
         print("\nStep 4: Cleanup, create blogs")
 
-        env.run(env.prefix + './runscript.sh set_root_blog_defaults')
+        env.run(env.prefix + './manage.sh set_root_blog_defaults')
 
         if confirm("Create child blogs?"): create_blogs()
+
+        env.run(env.prefix + './manage.sh setup_upload_dirs')
 
 
 def create_db():
@@ -215,16 +217,20 @@ def reload_db(dump_slug='dump'):
     destroy_db()
     create_db()
     with cd(env.path):
-        env.run(env.prefix + './manage.sh setup_wp-config --finish' % env )
+        env.run(env.prefix + './manage.sh setup_wp-config --finish' )
     load_db(dump_slug)
 
 
 def create_blogs():
-    with cd(env.path):
-        i = 0
-        response = ''
-        while "No more blogs" not in response:
-            response = env.run(env.prefix + "./manage.sh setup_blog -n %s" % i)
+    i = 0
+    response = ''
+    while "No more blogs" not in response:
+        with cd(env.path):
+            if env.has_key('settings'):
+                response = env.run(env.prefix + "./manage.sh setup_blog -n %s" % i)
+            else:
+                response = env.run(env.prefix + "./manage.sh setup_blog -n %s" % i, capture=True)
+                print( response )
             i += 1
 
 

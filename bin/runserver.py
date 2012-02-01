@@ -164,20 +164,21 @@ try:
             break
 
         if php.poll() is 0:
-            print "nginx finished."
+            print "php finished."
             break
         elif php.poll() > 0:
-            print "nginx exited badly."
+            print "php exited badly."
             break
 
         if memcache.poll() is 0:
-            print "nginx finished."
+            print "memcache finished."
             break
         elif memcache.poll() > 0:
-            print "nginx exited badly."
+            print "memcache exited badly."
             break
 
         time.sleep(1)
+
 except KeyboardInterrupt:
     sys.stdout.write('\nstopping...')
     nginx.terminate()
