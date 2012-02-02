@@ -192,7 +192,21 @@ def dump_db(dump_slug='dump'):
     if not env.db_root_pass:
         env.db_root_pass = getpass("Database password: ")
     with cd(env.path):
-        env.run("mysqldump --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s --max_allowed_packet=2M --extended-insert=FALSE --lock-all-tables %(project_name)s |sed s/%(wpdomain)s/WPDEPLOYDOMAN/g |bzip2 > data/%(dump_slug)s.sql.bz2" % env)
+        env.run("mysqldump --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s --max_allowed_packet=2M --extended-insert=FALSE %(project_name)s |sed s/%(wpdomain)s/WPDEPLOYDOMAN/g |bzip2 > data/%(dump_slug)s.sql.bz2" % env)
+
+
+def put_dump(dump_slug='dump'):
+    check_env()
+    env.dump_slug = dump_slug
+    put('data/%(dump_slug)s.sql.bz2' % env,'%(path)s/data/%(dump_slug)s.sql.bz2' % env)
+    print('Put %(dump_slug)s.sql.bz2 on server.\n' % env)
+
+
+def get_dump(dump_slug='dump'):
+    check_env()
+    env.dump_slug = dump_slug
+    get('%(path)s/data/%(dump_slug)s.sql.bz2' % env, 'data/%(dump_slug)s.sql.bz2' % env)
+    print('Got %(dump_slug)s.sql.bz2 from the server.\n' % env)
 
 
 def destroy_db():

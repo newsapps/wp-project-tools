@@ -26,8 +26,12 @@ $_SERVER["REQUEST_METHOD"] = "GET";
 if ( empty( $_SERVER["REQUEST_URI"] ) )
   $_SERVER["REQUEST_URI"] = "/cli";
 
-# Set the ABSPATH so WordPress can find its files
-define( 'ABSPATH', PROJECT_PATH . '/wordpress/' );
+# Set the ABSPATH so WordPress can find its files. Check if we're a
+# traditionally organized project, or a fancy project.
+if ( is_dir( PROJECT_PATH . '/wordpress' ) )
+    define( 'ABSPATH', PROJECT_PATH . '/wordpress/' );
+else
+    define( 'ABSPATH', PROJECT_PATH . '/' );
 
 if ( ! defined('WP_SITEURL') )
     define( 'WP_SITEURL', "http://".$settings['install']['hostname'] );

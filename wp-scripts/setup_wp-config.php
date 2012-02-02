@@ -8,6 +8,11 @@
  * the .htaccess and complete network installation config file.
  *****/
 
+if ( file_exists( 'wp-config.php' ) ) {
+    rename( 'wp-config.php', 'wp-config.old.php' );
+    print( "Moved old wp-config.php out of the way\n" );
+}
+
 require_once( 'tools/cli-load.php' );
 
 $options = getopt("", array("finish"));
@@ -72,8 +77,9 @@ define( 'BLOG_ID_CURRENT_SITE', 1 );
 \n";
 }
 
-$newConfig .= "
-define( 'DISABLE_WP_CRON', true);
+# Check if this is a traditionally orgainzed project, or if it's fancy
+if ( is_dir( PROJECT_PATH . '/wordpress' ) )
+    $newConfig .= "
 define( 'WP_CONTENT_DIR', dirname(__FILE__) );
 define( 'WP_PLUGIN_DIR', dirname(__FILE__) . '/plugins' );
 define( 'WPMU_PLUGIN_DIR', dirname(__FILE__) . '/mu-plugins' );
@@ -81,7 +87,16 @@ define( 'UPLOADBLOGSDIR',  '../media/blogs.dir' ); # has to be relative
 
 /** Absolute path to the WordPress directory. */
 if ( !defined('ABSPATH') )
-	define('ABSPATH', dirname(__FILE__) . '/wordpress/');
+	define('ABSPATH', dirname(__FILE__) . '/wordpress/');\n";
+else
+    $newConfig .= "
+/** Absolute path to the WordPress directory. */
+if ( !defined('ABSPATH') )
+	define('ABSPATH', dirname(__FILE__) );\n";
+
+
+$newConfig .= "
+define( 'DISABLE_WP_CRON', true);
 
 /** Extra configuration settings that won't change **/
 if ( file_exists( 'wp-config.global.php' ) )
@@ -93,6 +108,6 @@ require_once(ABSPATH . 'wp-settings.php');";
 fwrite(fopen("wp-config.php", 'w'), $newConfig);
 
 if ( array_key_exists('finish', $options) )
-	print("Wrote finalized wp-config.php and .htaccess\n");
+	print("Wrote finalized wp-config.php and (maybe) .htaccess\n");
 else
 	print("Wrote starter wp-config.php\n");
