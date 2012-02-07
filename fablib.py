@@ -248,10 +248,12 @@ def create_blogs():
 
 
 def force_nfs_refresh():
+    check_env()
     env.run("run-for-cluster -t app 'cd %(path)s; git status;'" % env)
 
 
 def sync_app_servers():
+    check_env()
     env.run("run-for-cluster -t app 'sudo rsync -a --delete /mnt/apps/sites/%(project_name)s/ %(path)s/'" % env)
 
 
