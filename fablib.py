@@ -258,10 +258,19 @@ def sync_app_servers():
 
 
 def fix_perms():
+    check_env()
     if env.fix_perms:
         with cd(env.path):
             env.sudo("chgrp -Rf www-data media")
             env.sudo("chmod -Rf g+rw media")
+
+
+def link_media():
+    check_env()
+    with cd(env.path):
+        env.run("ln -s /mnt/apps/media/%(project_name)s media" % env)
+        env.run("ln -s /mnt/apps/media/%(project_name)s/fragment-cache fragment-cache" % env)
+        print('Remember to sync!');
 
 
 def wrap_media():
@@ -306,22 +315,7 @@ def shiva_the_destroyer():
         destroy_db()
 
 """
-Utilities
-"""
-def check_env():
-    require('settings', provided_by=[production, staging])
-    env.sudo = sudo
-    env.run = run
-
-
-def _confirm_branch():
-    if (env.settings == 'production' and env.gitbranch != 'stable'):
-        answer = prompt("You are trying to deploy the '%(gitbranch)s' branch to production.\nYou should really only deploy a stable branch.\nDo you know what you're doing?" % env, default="Not at all")
-        if answer not in ('y','Y','yes','Yes','buzz off','screw you'):
-            exit()
-
-"""
-Project specific commands
+Varnish cache commands
 """
 def clear_cache():
     require('settings', provided_by=[production, staging])
@@ -358,6 +352,9 @@ def clear_url( url ):
             env.run('curl -s -I -X PURGE -H "Host: %s" http://%s%s' % (env.wpdomain, server, url))
 
 
+"""
+Miscellaneous
+"""
 def run_script(script_name):
     """
     Run a script in the /wp-scripts/ directory.
@@ -372,3 +369,20 @@ def robots_setup():
 
     with cd(env.path):
         env.run('ln -s robots_%(settings)s.txt robots.txt' % env)
+        print('Remember to sync!');
+
+"""
+Utilities
+"""
+def check_env():
+    require('settings', provided_by=[production, staging])
+    env.sudo = sudo
+    env.run = run
+
+
+def _confirm_branch():
+    if (env.settings == 'production' and env.gitbranch != 'stable'):
+        answer = prompt("You are trying to deploy the '%(gitbranch)s' branch to production.\nYou should really only deploy a stable branch.\nDo you know what you're doing?" % env, default="Not at all")
+        if answer not in ('y','Y','yes','Yes','buzz off','screw you'):
+            exit()
+
