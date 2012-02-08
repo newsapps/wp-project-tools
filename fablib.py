@@ -323,29 +323,37 @@ Project specific commands
 """
 def clear_cache():
     require('settings', provided_by=[production, staging])
-    for server in env.cache_servers:
-        env.run('curl -I -X PURGE -H "Host: %s" http://%s/' % (env.wpdomain, server))
+    if confirm("Are you sure? This can bring the servers to their knees..."):
+        for server in env.cache_servers:
+            env.run('curl -s -I -X PURGE -H "Host: %s" http://%s/' % (env.wpdomain, server))
 
 
 def clear_media_cache():
     require('settings', provided_by=[production, staging])
     for server in env.cache_servers:
-        env.run('curl -I -X PURGE -H "Host: %s" http://%s/media/.*' % (env.wpdomain, server))
-        env.run('curl -I -X PURGE -H "Host: %s" http://%s/.*/media/.*' % (env.wpdomain, server))
-        env.run('curl -I -X PURGE -H "Host: %s" http://%s/.*/files/.*' % (env.wpdomain, server))
+        env.run('curl -s -I -X PURGE -H "Host: %s" http://%s/media/.*' % (env.wpdomain, server))
+        env.run('curl -s -I -X PURGE -H "Host: %s" http://%s/.*/media/.*' % (env.wpdomain, server))
+        env.run('curl -s -I -X PURGE -H "Host: %s" http://%s/.*/files/.*' % (env.wpdomain, server))
 
 
 def clear_asset_cache():
     require('settings', provided_by=[production, staging])
     for server in env.cache_servers:
-        env.run('curl -I -X PURGE -H "Host: %s" http://%s/wp-content/.*' % (env.wpdomain, server))
-        env.run('curl -I -X PURGE -H "Host: %s" http://%s/.*/wp-content/.*' % (env.wpdomain, server))
+        env.run('curl -s -I -X PURGE -H "Host: %s" http://%s/wp-content/.*' % (env.wpdomain, server))
+        env.run('curl -s -I -X PURGE -H "Host: %s" http://%s/.*/wp-content/.*' % (env.wpdomain, server))
 
 
 def clear_admin_cache():
     require('settings', provided_by=[production, staging])
     for server in env.cache_servers:
-        env.run('curl -I -X PURGE -H "Host: %s" http://%s/.*/wp-admin/.*' % (env.wpdomain, server))
+        env.run('curl -s -I -X PURGE -H "Host: %s" http://%s/.*/wp-admin/.*' % (env.wpdomain, server))
+
+
+def clear_url( url ):
+    check_env()
+    if confirm("Are you sure? This can bring the servers to their knees..."):
+        for server in env.cache_servers:
+            env.run('curl -s -I -X PURGE -H "Host: %s" http://%s%s' % (env.wpdomain, server, url))
 
 
 def run_script(script_name):
@@ -358,7 +366,7 @@ def run_script(script_name):
 
 
 def robots_setup():
-    require('settings', provided_by=[production, staging])
+    check_env()
 
     with cd(env.path):
-        env.run('ln -s robots_%(settings)s.txt robots.txt')
+        env.run('ln -s robots_%(settings)s.txt robots.txt' % env)
