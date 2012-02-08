@@ -24,7 +24,7 @@ global $settings;
 if ( array_key_exists('finish', $options) && empty( $settings['install']['no_apache'] ) ) {
     // Write the .htaccess file
     $htaccess_file = 'RewriteEngine On
-	RewriteBase ' . $settings['base'] . '
+	RewriteBase ' . $settings['install']['base'] . '
 	RewriteRule ^index\.php$ - [L]
 
 	# uploaded files
