@@ -45,8 +45,7 @@ def git_checkout():
         run('git checkout %(gitbranch)s' % env)
         run('git pull origin %(gitbranch)s' % env)
 
-        run('git submodule init')
-        run('git submodule update --recursive')
+        run('git submodule update --init --recursive')
 
 
 def git_tag_stable():
