@@ -180,18 +180,28 @@ def create_db():
 
 def load_db(dump_slug='dump'):
     env.dump_slug = dump_slug
+
     if not env.db_root_pass:
         env.db_root_pass = getpass("Database password: ")
-    with cd(env.path):
-        env.run("bzcat data/%(dump_slug)s.sql.bz2 |sed s/WPDEPLOYDOMAN/%(wpdomain)s/g |mysql --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s --max_allowed_packet=2M %(db_name)s" % env)
+
+    if env.db_host == 'localhost':
+        env.run("bzcat data/%(dump_slug)s.sql.bz2 |sed s/WPDEPLOYDOMAN/%(wpdomain)s/g |mysql --user=%(db_root_user)s --password=%(db_root_pass)s %(db_name)s" % env)
+    else:
+        with cd(env.path):
+            env.run("bzcat data/%(dump_slug)s.sql.bz2 |sed s/WPDEPLOYDOMAN/%(wpdomain)s/g |mysql --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s %(db_name)s" % env)
 
 
 def dump_db(dump_slug='dump'):
     env.dump_slug = dump_slug
+
     if not env.db_root_pass:
         env.db_root_pass = getpass("Database password: ")
-    with cd(env.path):
-        env.run("mysqldump --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s --max_allowed_packet=2M --extended-insert=FALSE %(project_name)s |sed s/%(wpdomain)s/WPDEPLOYDOMAN/g |bzip2 > data/%(dump_slug)s.sql.bz2" % env)
+
+    if env.db_host == 'localhost':
+        env.run("mysqldump --user=%(db_root_user)s --password=%(db_root_pass)s --quick %(project_name)s |sed s/%(wpdomain)s/WPDEPLOYDOMAN/g |bzip2 > data/%(dump_slug)s.sql.bz2" % env)
+    else:
+        with cd(env.path):
+            env.run("mysqldump --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s --quick --skip-lock-tables %(project_name)s |sed s/%(wpdomain)s/WPDEPLOYDOMAN/g |bzip2 > data/%(dump_slug)s.sql.bz2" % env)
 
 
 def put_dump(dump_slug='dump'):
