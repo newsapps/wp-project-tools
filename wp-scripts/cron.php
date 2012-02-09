@@ -19,7 +19,7 @@ if ( is_multisite() ) {
     $offset    = $start_idx;
     $length    = (!empty($end_idx))? $end_idx - $start_idx:null;
 
-    $query = "select blog_id from wp_blogs where blog_id > 1";
+    $query = "select blog_id from wp_blogs where blog_id >= 1";
     $results = array_slice(
         $wpdb->get_results($query, 'ARRAY_A'), $offset, $length);
 

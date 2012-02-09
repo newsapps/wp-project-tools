@@ -45,9 +45,8 @@ def git_checkout():
         run('git checkout %(gitbranch)s' % env)
         run('git pull origin %(gitbranch)s' % env)
 
-        if env.gitsubmodules:
-            run('git submodule init')
-            run('git submodule update --recursive')
+        run('git submodule init')
+        run('git submodule update --recursive')
 
 
 def git_tag_stable():
@@ -182,18 +181,42 @@ def create_db():
 
 def load_db(dump_slug='dump'):
     env.dump_slug = dump_slug
+
     if not env.db_root_pass:
         env.db_root_pass = getpass("Database password: ")
-    with cd(env.path):
-        env.run("bzcat data/%(dump_slug)s.sql.bz2 |sed s/WPDEPLOYDOMAN/%(wpdomain)s/g |mysql --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s --max_allowed_packet=2M %(db_name)s" % env)
+
+    if env.db_host == 'localhost':
+        env.run("bzcat data/%(dump_slug)s.sql.bz2 |sed s/WPDEPLOYDOMAN/%(wpdomain)s/g |mysql --user=%(db_root_user)s --password=%(db_root_pass)s %(db_name)s" % env)
+    else:
+        with cd(env.path):
+            env.run("bzcat data/%(dump_slug)s.sql.bz2 |sed s/WPDEPLOYDOMAN/%(wpdomain)s/g |mysql --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s %(db_name)s" % env)
 
 
 def dump_db(dump_slug='dump'):
     env.dump_slug = dump_slug
+
     if not env.db_root_pass:
         env.db_root_pass = getpass("Database password: ")
-    with cd(env.path):
-        env.run("mysqldump --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s --max_allowed_packet=2M --extended-insert=FALSE --lock-all-tables %(project_name)s |sed s/%(wpdomain)s/WPDEPLOYDOMAN/g |bzip2 > data/%(dump_slug)s.sql.bz2" % env)
+
+    if env.db_host == 'localhost':
+        env.run("mysqldump --user=%(db_root_user)s --password=%(db_root_pass)s --quick %(project_name)s |sed s/%(wpdomain)s/WPDEPLOYDOMAN/g |bzip2 > data/%(dump_slug)s.sql.bz2" % env)
+    else:
+        with cd(env.path):
+            env.run("mysqldump --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s --quick --skip-lock-tables %(project_name)s |sed s/%(wpdomain)s/WPDEPLOYDOMAN/g |bzip2 > data/%(dump_slug)s.sql.bz2" % env)
+
+
+def put_dump(dump_slug='dump'):
+    check_env()
+    env.dump_slug = dump_slug
+    put('data/%(dump_slug)s.sql.bz2' % env,'%(path)s/data/%(dump_slug)s.sql.bz2' % env)
+    print('Put %(dump_slug)s.sql.bz2 on server.\n' % env)
+
+
+def get_dump(dump_slug='dump'):
+    check_env()
+    env.dump_slug = dump_slug
+    get('%(path)s/data/%(dump_slug)s.sql.bz2' % env, 'data/%(dump_slug)s.sql.bz2' % env)
+    print('Got %(dump_slug)s.sql.bz2 from the server.\n' % env)
 
 
 def destroy_db():
@@ -236,18 +259,29 @@ def create_blogs():
 
 
 def force_nfs_refresh():
+    check_env()
     env.run("run-for-cluster -t app 'cd %(path)s; git status;'" % env)
 
 
 def sync_app_servers():
+    check_env()
     env.run("run-for-cluster -t app 'sudo rsync -a --delete /mnt/apps/sites/%(project_name)s/ %(path)s/'" % env)
 
 
 def fix_perms():
+    check_env()
     if env.fix_perms:
         with cd(env.path):
             env.sudo("chgrp -Rf www-data media")
             env.sudo("chmod -Rf g+rw media")
+
+
+def link_media():
+    check_env()
+    with cd(env.path):
+        env.run("ln -s /mnt/apps/media/%(project_name)s media" % env)
+        env.run("ln -s /mnt/apps/media/%(project_name)s/fragment-cache fragment-cache" % env)
+        print('Remember to sync!');
 
 
 def wrap_media():
@@ -292,6 +326,63 @@ def shiva_the_destroyer():
         destroy_db()
 
 """
+Varnish cache commands
+"""
+def clear_cache():
+    require('settings', provided_by=[production, staging])
+    if confirm("Are you sure? This can bring the servers to their knees..."):
+        for server in env.cache_servers:
+            env.run('curl -s -I -X PURGE -H "Host: %s" http://%s/' % (env.wpdomain, server))
+
+
+def clear_media_cache():
+    require('settings', provided_by=[production, staging])
+    for server in env.cache_servers:
+        env.run('curl -s -I -X PURGE -H "Host: %s" http://%s/media/.*' % (env.wpdomain, server))
+        env.run('curl -s -I -X PURGE -H "Host: %s" http://%s/.*/media/.*' % (env.wpdomain, server))
+        env.run('curl -s -I -X PURGE -H "Host: %s" http://%s/.*/files/.*' % (env.wpdomain, server))
+
+
+def clear_asset_cache():
+    require('settings', provided_by=[production, staging])
+    for server in env.cache_servers:
+        env.run('curl -s -I -X PURGE -H "Host: %s" http://%s/wp-content/.*' % (env.wpdomain, server))
+        env.run('curl -s -I -X PURGE -H "Host: %s" http://%s/.*/wp-content/.*' % (env.wpdomain, server))
+
+
+def clear_admin_cache():
+    require('settings', provided_by=[production, staging])
+    for server in env.cache_servers:
+        env.run('curl -s -I -X PURGE -H "Host: %s" http://%s/.*/wp-admin/.*' % (env.wpdomain, server))
+
+
+def clear_url( url ):
+    check_env()
+    if confirm("Are you sure? This can bring the servers to their knees..."):
+        for server in env.cache_servers:
+            env.run('curl -s -I -X PURGE -H "Host: %s" http://%s%s' % (env.wpdomain, server, url))
+
+
+"""
+Miscellaneous
+"""
+def run_script(script_name):
+    """
+    Run a script in the /wp-scripts/ directory.
+    """
+    env.script_name = script_name
+    with cd(env.path):
+        env.run(env.prefix + './manage.sh %(script_name)s' % env)
+
+
+def robots_setup():
+    check_env()
+
+    with cd(env.path):
+        env.run('ln -s robots_%(settings)s.txt robots.txt' % env)
+        print('Remember to sync!');
+
+"""
 Utilities
 """
 def check_env():
@@ -306,47 +397,3 @@ def _confirm_branch():
         if answer not in ('y','Y','yes','Yes','buzz off','screw you'):
             exit()
 
-"""
-Project specific commands
-"""
-def clear_cache():
-    require('settings', provided_by=[production, staging])
-    for server in env.cache_servers:
-        env.run('curl -I -X PURGE -H "Host: %s" http://%s/' % (env.wpdomain, server))
-
-
-def clear_media_cache():
-    require('settings', provided_by=[production, staging])
-    for server in env.cache_servers:
-        env.run('curl -I -X PURGE -H "Host: %s" http://%s/media/.*' % (env.wpdomain, server))
-        env.run('curl -I -X PURGE -H "Host: %s" http://%s/.*/media/.*' % (env.wpdomain, server))
-        env.run('curl -I -X PURGE -H "Host: %s" http://%s/.*/files/.*' % (env.wpdomain, server))
-
-
-def clear_asset_cache():
-    require('settings', provided_by=[production, staging])
-    for server in env.cache_servers:
-        env.run('curl -I -X PURGE -H "Host: %s" http://%s/wp-content/.*' % (env.wpdomain, server))
-        env.run('curl -I -X PURGE -H "Host: %s" http://%s/.*/wp-content/.*' % (env.wpdomain, server))
-
-
-def clear_admin_cache():
-    require('settings', provided_by=[production, staging])
-    for server in env.cache_servers:
-        env.run('curl -I -X PURGE -H "Host: %s" http://%s/.*/wp-admin/.*' % (env.wpdomain, server))
-
-
-def run_script(script_name):
-    """
-    Run a script in the /wp-scripts/ directory.
-    """
-    env.script_name = script_name
-    with cd(env.path):
-        env.run(env.prefix + './manage.sh %(script_name)s' % env)
-
-
-def robots_setup():
-    require('settings', provided_by=[production, staging])
-
-    with cd(env.path):
-        env.run('ln -s robots_%(settings)s.txt robots.txt')
