@@ -162,8 +162,9 @@ def bootstrap():
 
         env.run(env.prefix + './manage.sh set_root_blog_defaults')
 
-        if confirm("Create child blogs?"): create_blogs()
+    if confirm("Create child blogs?"): create_blogs()
 
+    with cd(env.path):
         env.run(env.prefix + './manage.sh setup_upload_dirs')
 
 
@@ -226,10 +227,10 @@ def create_blogs():
     response = ''
     while "No more blogs" not in response:
         with cd(env.path):
-            if env.has_key('settings'):
-                response = env.run(env.prefix + "./manage.sh setup_blog -n %s" % i)
+            if env.has_key('settings') in ('staging', 'production'):
+                response = run(env.prefix + "./manage.sh setup_blog -n %s" % i)
             else:
-                response = env.run(env.prefix + "./manage.sh setup_blog -n %s" % i, capture=True)
+                response = local("./manage.sh setup_blog -n %s" % i, capture=True)
                 print( response )
             i += 1
 
