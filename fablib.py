@@ -226,7 +226,7 @@ def destroy_db():
         if env.db_host == 'localhost':
             env.run('mysqladmin -f --user=%(db_root_user)s --password=%(db_root_pass)s drop %(project_name)s' % env)
             env.run('echo "DROP USER \'%(db_wpuser_name)s\'@\'localhost\';" | mysql --user=%(db_root_user)s --password=%(db_root_pass)s' % env)
-        else:
+        elif confirm("Are you sure you want to drop the %s database?" % env.settings):
             env.run('mysqladmin -f --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s drop %(project_name)s' % env)
             env.run('echo "DROP USER \'%(db_wpuser_name)s\'@\'%%\';" | mysql --host=%(db_host)s --user=%(db_root_user)s --password=%(db_root_pass)s' % env)
 
@@ -278,8 +278,7 @@ def fix_perms():
 def link_media():
     check_env()
     with cd(env.path):
-        env.run("ln -s /mnt/apps/media/%(project_name)s media" % env)
-        env.run("ln -s /mnt/apps/media/%(project_name)s/fragment-cache fragment-cache" % env)
+        env.run("ln -s /mnt/apps/media/%(project_name)s/* ./" % env)
         print('Remember to sync!');
 
 
@@ -369,6 +368,7 @@ def run_script(script_name):
     """
     Run a script in the /wp-scripts/ directory.
     """
+    check_env()
     env.script_name = script_name
     with cd(env.path):
         env.run(env.prefix + './manage.sh %(script_name)s' % env)

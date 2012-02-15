@@ -33,7 +33,7 @@ git init
 git submodule add https://github.com/newsapps/wp-project-tools.git tools
 
 # Setup some project directories
-mkdir lib mu-plugins plugins themes wp-scripts
+mkdir lib mu-plugins plugins themes wp-scripts blogs.dir uploads
 
 # Get WordPress
 git submodule add https://github.com/WordPress/WordPress.git wordpress

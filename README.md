@@ -12,7 +12,8 @@ We moved everything out of the WordPress directory so that we could make ample u
 
     data/       # Store configuration for the site, data dumps and data files for doing migrations
     lib/        # Place to put extra php libraries
-    media/      # Where uploads and blogs.dir go
+    uploads/    # Wordpress uploads for a single blog or the root blog in a network
+    blogs.dir/  # Uploads for network blogs
     plugins/    # Put your wordpress plugins here
     tools/      # This repository
     http/       # Place for your apache, nginx, http server config files

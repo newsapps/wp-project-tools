@@ -13,7 +13,7 @@
 
 include( 'tools/cli-load.php' );
 
-update_option("upload_path", "../media/uploads");
+update_option("upload_path", "../uploads");
 update_option("upload_url_path", "/wp-content/uploads");
 print( "Set the root blog upload dir to 'media/uploads'\n" );
 
@@ -26,9 +26,9 @@ if ( is_multisite() ) {
 
         $blog_slug = str_replace('/', '', $blog['path']);
 
-        update_option("upload_path", "../media/blogs.dir/${blog['blog_id']}");
+        update_option("upload_path", "../blogs.dir/${blog['blog_id']}");
         update_option("upload_url_path", "/wp-content/blogs.dir/${blog['blog_id']}");
-        print( "Set the upload dir for '".get_bloginfo('name')."' to 'media/blogs.dir/${blog['blog_id']}'\n" );
+        print( "Set the upload dir for '".get_bloginfo('name')."' to 'blogs.dir/${blog['blog_id']}'\n" );
 
         restore_current_blog();
     }
