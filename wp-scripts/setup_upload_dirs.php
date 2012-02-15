@@ -15,7 +15,7 @@ include( 'tools/cli-load.php' );
 
 update_option("upload_path", "../uploads");
 update_option("upload_url_path", "/wp-content/uploads");
-print( "Set the root blog upload dir to 'media/uploads'\n" );
+print( "Set the root blog upload dir to 'uploads'\n" );
 
 if ( is_multisite() ) {
     $query = "select blog_id, path from wp_blogs where blog_id > 1";
