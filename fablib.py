@@ -239,8 +239,6 @@ def destroy_attachments():
 def reload_db(dump_slug='dump'):
     destroy_db()
     create_db()
-    with cd(env.path):
-        env.run(env.prefix + './manage.sh setup_wp-config --finish' )
     load_db(dump_slug)
 
 
@@ -249,7 +247,7 @@ def create_blogs():
     response = ''
     while "No more blogs" not in response:
         with cd(env.path):
-            if env.has_key('settings') in ('staging', 'production'):
+            if 'settings' in env:
                 response = run(env.prefix + "./manage.sh setup_blog -n %s" % i)
             else:
                 response = local("./manage.sh setup_blog -n %s" % i, capture=True)

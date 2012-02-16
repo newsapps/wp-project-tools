@@ -98,8 +98,8 @@ $newConfig .= "
 define( 'DISABLE_WP_CRON', true);
 
 /** Extra configuration settings that won't change **/
-if ( file_exists( 'wp-config.global.php' ) )
-    require_once( 'wp-config.global.php' );
+if ( file_exists( dirname(__FILE__) . '/wp-config.global.php' ) )
+    require_once( dirname(__FILE__) . '/wp-config.global.php' );
 
 /** Sets up WordPress vars and included files. */
 require_once(ABSPATH . 'wp-settings.php');";
