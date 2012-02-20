@@ -275,9 +275,9 @@ def fix_perms():
 
 def link_media():
     check_env()
-    with cd(env.path):
+    with cd(env.path) and settings(warn_only=True):
         env.run("ln -s /mnt/apps/media/%(project_name)s/* ./" % env)
-        print('Remember to sync!');
+    print('Remember to sync!');
 
 
 def wrap_media():
