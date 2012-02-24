@@ -51,7 +51,7 @@ function do_cron() {
     # Lifted from wp-cron.php because it can't handle multiple blogs
     if ( false === $crons = _get_cron_array() ) {
         print("no crons.\n");
-        continue;
+        return;
     }
 
     $keys = array_keys( $crons );
@@ -59,7 +59,7 @@ function do_cron() {
 
     if ( isset($keys[0]) && $keys[0] > $local_time ) {
         print("not yet time.\n");
-        continue;
+        return;
     }
 
     foreach ($crons as $timestamp => $cronhooks) {
