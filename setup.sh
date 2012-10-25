@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ -z $WORDPRESS_TAG ]]; then
-    WORDPRESS_TAG="3.3.1"
+    WORDPRESS_TAG="3.4.2"
 fi
 
 # Setup a new WordPress project
