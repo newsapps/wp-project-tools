@@ -61,7 +61,7 @@ then
     # install some python requirements
     easy_install pip
     pip install fabric
-    pip install git+http://github.com/facebook/phpsh.git
+    pip install git+https://github.com/facebook/phpsh.git
     pip install pyfsevents
 
 elif [[ $command == "shell" ]]

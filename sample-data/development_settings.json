@@ -14,7 +14,6 @@
         "subdomain_install": false
     },
 
-
     "wp-config": {
         "DB_NAME":           "example",
         "DB_USER":           "example",
@@ -26,6 +25,8 @@
         "WP_DEBUG":          false,
         "DEPLOYMENT_TARGET": "development"
     },
+	
+	"table_prefix": "wp_",
 
     "network": {
         "allowed_themes": [

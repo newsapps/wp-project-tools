@@ -58,7 +58,7 @@ foreach ( $settings['wp-config'] as $key => $val ) {
 }
 
 $newConfig .= "
-\$table_prefix  = 'wp_';\n";
+\$table_prefix  = '". $settings['table_prefix'] . "';\n\n";
 
 $newConfig .= file_get_contents('https://api.wordpress.org/secret-key/1.1/salt/');
 
