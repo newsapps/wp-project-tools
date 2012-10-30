@@ -21,8 +21,6 @@ from data.fabsettings import *
 env.sudo = local
 env.run = local
 
-env.cache_servers = ["lb1", "lb2", "lb3"]
-
 """
 Commands - setup
 """
