@@ -263,19 +263,31 @@ def sync_app_servers():
     env.run("run-for-cluster -t app 'sudo rsync -a --delete /mnt/apps/sites/%(project_name)s/ %(path)s/'" % env)
 
 
+def setup_media():
+    check_env()
+    with cd('/mnt/apps/media'):
+        env.run("mkdir %(project_name)s" % env)
+        env.run("mkdir %(project_name)s/uploads" % env)
+        env.run("mkdir %(project_name)s/blogs.dir" % env)
+        env.run("mkdir %(project_name)s/fragment-cache" % env)
+
+    link_media()
+    fix_perms()
+
+
 def fix_perms():
     check_env()
     if env.fix_perms:
-        with cd(env.path):
-            env.sudo("chgrp -Rf www-data media")
-            env.sudo("chmod -Rf g+rw media")
+        with cd('/mnt/apps/media'):
+            env.sudo("chgrp -Rf www-data %(project_name)s" % env)
+            env.sudo("chmod -Rf g+rw %(project_name)s" % env)
 
 
 def link_media():
     check_env()
-    with cd(env.path) and settings(warn_only=True):
-        env.run("ln -s /mnt/apps/media/%(project_name)s/* ./" % env)
-    print('Remember to sync!');
+    with settings(warn_only=True):
+        env.run("ln -s /mnt/apps/media/%(project_name)s/* %(path)s/" % env)
+    print('Remember to sync!')
 
 
 def wrap_media():
