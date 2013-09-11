@@ -266,10 +266,10 @@ def sync_app_servers():
 def setup_media():
     check_env()
     with cd('/mnt/apps/media'):
-        env.run("mkdir %(project_name)s" % env)
-        env.run("mkdir %(project_name)s/uploads" % env)
-        env.run("mkdir %(project_name)s/blogs.dir" % env)
-        env.run("mkdir %(project_name)s/fragment-cache" % env)
+        env.sudo("mkdir %(project_name)s" % env)
+        env.sudo("mkdir %(project_name)s/uploads" % env)
+        env.sudo("mkdir %(project_name)s/blogs.dir" % env)
+        env.sudo("mkdir %(project_name)s/fragment-cache" % env)
 
     link_media()
     fix_perms()
@@ -292,7 +292,7 @@ def link_media():
 
 def wrap_media():
     with cd(env.path):
-        env.run('tar zcf data/media.tgz wp-content/blogs.dir/* wp-content/uploads/*')
+        env.run('tar zcf data/media.tgz blogs.dir/* uploads/*')
     print('Wrapped up media.\n')
 
 
