@@ -20,6 +20,7 @@ from data.fabsettings import *
 # code for local development and deployed servers.
 env.sudo = local
 env.run = local
+env.cache_servers = ["lb1"]
 
 """
 Commands - setup
